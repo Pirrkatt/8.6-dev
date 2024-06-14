@@ -143,7 +143,7 @@ class Player final : public Creature, public Cylinder
 		const std::string& getName() const final {
 			return name;
 		}
-		void setName(std::string name) {
+		void setName(const std::string& name) {
 			this->name = name;
 		}
 		const std::string& getNameDescription() const final {
@@ -680,6 +680,11 @@ class Player final : public Creature, public Cylinder
 		void sendRemoveTileThing(const Position& pos, int32_t stackpos) {
 			if (stackpos != -1 && client) {
 				client->sendRemoveTileThing(pos, stackpos);
+			}
+		}
+		void sendUpdateTileCreature(const Creature* creature) {
+			if (client) {
+				client->sendUpdateTileCreature(creature->getPosition(), creature->getTile()->getClientIndexOfCreature(this, creature), creature);
 			}
 		}
 		void sendUpdateTile(const Tile* tile, const Position& pos) {

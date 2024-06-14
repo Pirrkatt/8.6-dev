@@ -1,3 +1,5 @@
+dofile('data/lib/core/storages.lua')
+
 dofile('data/lib/core/constants.lua')
 dofile('data/lib/core/container.lua')
 dofile('data/lib/core/creature.lua')
@@ -8,3 +10,5 @@ dofile('data/lib/core/player.lua')
 dofile('data/lib/core/position.lua')
 dofile('data/lib/core/teleport.lua')
 dofile('data/lib/core/tile.lua')
+
+dofile('data/lib/core/json.lua')

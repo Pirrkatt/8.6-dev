@@ -29,8 +29,15 @@ function onLogin(player)
 		player:setVocation(vocation:getDemotion())
 	end
 
+	-- AutoLoot
+	if player:isAutoLootActivated() then
+		player:spawnAutoLooter()
+	end
+
 	-- Events
 	player:registerEvent("PlayerDeath")
 	player:registerEvent("DropLoot")
+	player:registerEvent("AutoLootOpCode")
+	player:registerEvent("AutoLoot")
 	return true
 end

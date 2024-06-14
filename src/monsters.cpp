@@ -79,6 +79,7 @@ void MonsterType::reset()
 	isConvinceable = false;
 	isAttackable = true;
 	isHostile = true;
+	isAutoLooter = false;
 
 	lightLevel = 0;
 	lightColor = 0;
@@ -810,6 +811,8 @@ bool Monsters::loadMonster(const std::string& file, const std::string& monsterNa
 				mType->isIllusionable = attr.as_bool();
 			} else if (strcasecmp(attrName, "convinceable") == 0) {
 				mType->isConvinceable = attr.as_bool();
+			} else if (strcasecmp(attrName, "autolooter") == 0) {
+				mType->isAutoLooter = attr.as_bool();
 			} else if (strcasecmp(attrName, "pushable") == 0) {
 				mType->pushable = attr.as_bool();
 			} else if (strcasecmp(attrName, "canpushitems") == 0) {

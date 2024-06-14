@@ -296,6 +296,10 @@ class Creature : virtual public Thing
 			return master;
 		}
 
+		virtual bool isAutoLooter() const {
+			return false;
+		}
+
 		void addSummon(Creature* creature);
 		void removeSummon(Creature* creature);
 		const std::list<Creature*>& getSummons() const {

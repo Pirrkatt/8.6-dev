@@ -794,6 +794,10 @@ bool Player::canWalkthrough(const Creature* creature) const
 		return true;
 	}
 
+	if (creature->isSummon() && creature->isAutoLooter()) {
+		return true;
+	}
+
 	const Player* player = creature->getPlayer();
 	if (!player) {
 		return false;
@@ -827,6 +831,10 @@ bool Player::canWalkthrough(const Creature* creature) const
 bool Player::canWalkthroughEx(const Creature* creature) const
 {
 	if (group->access) {
+		return true;
+	}
+
+	if (creature->isSummon() && creature->isAutoLooter()) {
 		return true;
 	}
 

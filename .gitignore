@@ -170,3 +170,8 @@ pip-log.txt
 .*.swp
 .*.swo
 
+# User-Pref
+*.dll
+*.exe
+config.lua
+**/test.lua

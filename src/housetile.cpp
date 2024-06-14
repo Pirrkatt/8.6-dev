@@ -79,11 +79,14 @@ void HouseTile::updateHouse(Item* item)
 ReturnValue HouseTile::queryAdd(int32_t index, const Thing& thing, uint32_t count, uint32_t flags, Creature* actor/* = nullptr*/) const
 {
 	if (const Creature* creature = thing.getCreature()) {
+		Creature* masterCreature = creature->getMaster();
+		Player* masterPlayer = dynamic_cast<Player*>(masterCreature);
+
 		if (const Player* player = creature->getPlayer()) {
 			if (!house->isInvited(player)) {
 				return RETURNVALUE_PLAYERISNOTINVITED;
 			}
-		} else {
+		} else if (!masterPlayer || !(creature->isSummon() && creature->isAutoLooter() && house->isInvited(masterPlayer))) {
 			return RETURNVALUE_NOTPOSSIBLE;
 		}
 	} else if (thing.getItem() && actor) {

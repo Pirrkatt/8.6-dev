@@ -51,9 +51,9 @@ mapAuthor = "Komic"
 
 -- MySQL
 mysqlHost = "127.0.0.1"
-mysqlUser = "forgottenserver"
-mysqlPass = ""
-mysqlDatabase = "forgottenserver"
+mysqlUser = "tibiajob"
+mysqlPass = "tibiajob"
+mysqlDatabase = "tibiajob8.6"
 mysqlPort = 3306
 mysqlSock = ""
 

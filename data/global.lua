@@ -1,5 +1,15 @@
 dofile('data/lib/lib.lua')
 
+function getPoints(player)
+	local points = 0
+	local resultId = db.storeQuery("SELECT `premium_points` FROM `accounts` WHERE `id` = " .. player:getAccountId())
+	if resultId ~= false then
+	  points = result.getDataInt(resultId, "premium_points")
+	  result.free(resultId)
+	end
+	return points
+end
+
 STORAGEVALUE_PROMOTION = 30018
 
 ropeSpots = {384, 418, 8278, 8592}
@@ -54,6 +64,24 @@ function getFormattedWorldTime()
 		minutes = '0' .. minutes
 	end
 	return hours .. ':' .. minutes
+end
+
+table.contains = function(array, value)
+	for _, targetColumn in pairs(array) do
+		if targetColumn == value then
+			return true
+		end
+	end
+	return false
+end
+
+table.removeValue = function(array, value)
+	for k, v in pairs(array) do
+		if v == value then
+			table.remove(array, k)
+			break
+		end
+	end
 end
 
 string.split = function(str, sep)

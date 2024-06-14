@@ -71,8 +71,8 @@ Monster::Monster(MonsterType* _mtype) :
 	yellTicks = 0;
 	extraMeleeAttack = false;
 
-	strDescription = mType->nameDescription;
-	toLowerCaseString(strDescription);
+	nameDescription = mType->nameDescription;
+	toLowerCaseString(nameDescription);
 
 	stepDuration = 0;
 
@@ -100,6 +100,41 @@ void Monster::addList()
 void Monster::removeList()
 {
 	g_game.removeMonster(this);
+}
+
+const std::string& Monster::getName() const
+{
+	if (name.empty()) {
+		return mType->name;
+	}
+	return name;
+}
+
+void Monster::setName(const std::string& name)
+{
+	if (getName() == name) {
+		return;
+	}
+
+	this->name = name;
+
+	// NOTE: Due to how client caches known creatures,
+	// it is not feasible to send creature update to everyone that has ever met it
+	SpectatorVec spectators;
+	g_game.map.getSpectators(spectators, _position, true, true);
+	for (Creature* spectator : spectators) {
+		if (Player* tmpPlayer = spectator->getPlayer()) {
+			tmpPlayer->sendUpdateTileCreature(this);
+		}
+	}
+}
+
+const std::string& Monster::getNameDescription() const
+{
+	if (nameDescription.empty()) {
+		return mType->nameDescription;
+	}
+	return nameDescription;
 }
 
 bool Monster::canSee(const Position& pos) const
@@ -488,6 +523,12 @@ void Monster::onCreatureLeave(Creature* creature)
 		if (targetList.empty()) {
 			updateIdleStatus();
 		}
+	}
+
+	//Teleport autoLoot summon to target if master leaves sight
+	if (isSummon() && isAutoLooter() && getMaster() == creature) {
+		g_game.internalTeleport(this, getMaster()->getPosition(), false);
+		g_game.addMagicEffect(getPosition(), CONST_ME_TELEPORT);
 	}
 }
 
