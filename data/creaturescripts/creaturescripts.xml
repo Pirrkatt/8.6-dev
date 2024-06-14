@@ -10,4 +10,5 @@
 	<event type="extendedopcode" name="ExtendedOpcode" script="extendedopcode.lua" />
 	<event type="extendedopcode" name="AutoLootOpCode" script="autolootopcode.lua" />
 	<event type="kill" name="AutoLoot" script="autoloot.lua" />
+	<event type="extendedopcode" name="Shop" script="shop.lua" />
 </creaturescripts>

@@ -39,5 +39,6 @@ function onLogin(player)
 	player:registerEvent("DropLoot")
 	player:registerEvent("AutoLootOpCode")
 	player:registerEvent("AutoLoot")
+	player:registerEvent("Shop")
 	return true
 end
