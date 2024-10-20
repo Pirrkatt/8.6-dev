@@ -6,3 +6,6 @@ dofile('data/lib/compat/compat.lua')
 
 -- Additional libraries
 dofile('data/lib/autoloot.lua')
+
+-- Debugging
+dofile('data/lib/debugging/dump.lua')

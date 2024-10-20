@@ -84,6 +84,7 @@ function init()
   CATEGORY_ITEMS.addItem(1, 2463, 1, "Saiyan Armor Blessed")
   CATEGORY_ITEMS.addItem(2500, 2475, 1, "Mechanoid Helmet", "Desciption text...")
   CATEGORY_ITEMS.addItem(1, 2160, 100, "Crystal Coins")
+  CATEGORY_ITEMS.addItem(5, 2160, 2, "Crystal Coins")
   CATEGORY_FURNITURE.addFurnitureItem(1, 2160, 2222, 100, "ASd")
 
   CATEGORY_OUTFITS.addOutfit(500, {
@@ -518,22 +519,22 @@ function defaultItemBuyAction(player, offer, number)
   local getItemType = ItemType(offer["itemId"])
   if not getItemType then return end
 
-  local getCount = number and number or offer["buyCount"]
+  local totalCount = (number and number or 1) * offer['count']
 
   -- Check if the player has enough capacity for the items
-  if player:getFreeCapacity() < getItemType:getWeight(getCount) then
+  if player:getFreeCapacity() < getItemType:getWeight(totalCount) then
     return "Please make sure you have free capacity to hold these items."
   end
 
   local backpack = player:getSlotItem(CONST_SLOT_BACKPACK)
 
   -- Check if the player has enough slots in the backpack
-  if not backpack or backpack:getEmptySlots(true) < 1 then
+  if not backpack or backpack:getEmptySlots(true) < (getItemType:isStackable() and math.ceil(totalCount / 100) or totalCount) then
     return "Please make sure you have a free slot in your backpack."
   end
 
   -- Add the items to the player's inventory
-  local createdItem = player:addItem(offer["itemId"], getCount, false, getItemType:getCharges() or 1)
+  local createdItem = player:addItem(offer["itemId"], totalCount, false, getItemType:getCharges() or 1)
 
   if not createdItem then
     return "Can't add items! Do you have enough space?"
