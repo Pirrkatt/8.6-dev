@@ -71,12 +71,19 @@ void ProtocolStatus::onRecvFirstMessage(NetworkMessage& msg)
 		//Another ServerInfo protocol
 		case 0x01: {
 			uint16_t requestedInfo = msg.get<uint16_t>(); // only a Byte is necessary, though we could add new info here
-			std::string characterName;
+		
+			std::vector<std::string> characterNames;
+
 			if (requestedInfo & REQUEST_PLAYER_STATUS_INFO) {
-				characterName = msg.getString();
+				uint8_t size = msg.getByte();
+				characterNames.reserve(size);
+
+				for (uint8_t i = 0; i < size; i++) {
+					characterNames.push_back(msg.getString());
+				}
 			}
 			g_dispatcher.addTask(createTask(std::bind(&ProtocolStatus::sendInfo, std::static_pointer_cast<ProtocolStatus>(shared_from_this()),
-								  requestedInfo, characterName)));
+								  requestedInfo, std::move(characterNames))));
 			return;
 		}
 
@@ -155,7 +162,7 @@ void ProtocolStatus::sendStatusString()
 	disconnect();
 }
 
-void ProtocolStatus::sendInfo(uint16_t requestedInfo, const std::string& characterName)
+void ProtocolStatus::sendInfo(uint16_t requestedInfo, const std::vector<std::string>& characterNames)
 {
 	auto output = OutputMessagePool::getOutputMessage();
 
@@ -210,10 +217,23 @@ void ProtocolStatus::sendInfo(uint16_t requestedInfo, const std::string& charact
 
 	if (requestedInfo & REQUEST_PLAYER_STATUS_INFO) {
 		output->addByte(0x22); // players info - online status info of a player
-		if (g_game.getPlayerByName(characterName) != nullptr) {
-			output->addByte(0x01);
-		} else {
-			output->addByte(0x00);
+
+		uint8_t size = static_cast<uint8_t>(characterNames.size());
+		output->addByte(size);
+
+		for (const auto& characterName : characterNames) {
+			output->addString(characterName);
+			if (g_game.getPlayerByName(characterName) != nullptr) {
+				output->addByte(0x01);
+			} else {
+				output->addByte(0x00);
+			}
+
+			PlayerResourceInfo stats = getHealthManaInfo(characterName);
+			output->add<uint32_t>(stats.health);
+			output->add<uint32_t>(stats.healthMax);
+			output->add<uint32_t>(stats.mana);
+			output->add<uint32_t>(stats.manaMax);
 		}
 	}
 
@@ -225,4 +245,31 @@ void ProtocolStatus::sendInfo(uint16_t requestedInfo, const std::string& charact
 	}
 	send(output);
 	disconnect();
+}
+
+PlayerResourceInfo ProtocolStatus::getHealthManaInfo(const std::string& name)
+{
+	PlayerResourceInfo stats;
+
+	Player* player = g_game.getPlayerByName(name);
+	if (player) {
+        stats.health = player->getHealth();
+		stats.healthMax = player->getMaxHealth();
+		stats.mana = player->getMana();
+		stats.manaMax = player->getMaxMana();
+		return stats;
+	}
+
+	Database* db = Database::getInstance();
+	std::ostringstream query;
+	query << "SELECT `health`, `healthmax`, `mana`, `manamax` FROM `players` WHERE `name` = " << db->escapeString(name);
+	DBResult_ptr result = db->storeQuery(query.str());
+
+	if (result) {
+        stats.health = result->getNumber<uint32_t>("health");
+        stats.healthMax = result->getNumber<uint32_t>("healthmax");
+        stats.mana = result->getNumber<uint32_t>("mana");
+        stats.manaMax = result->getNumber<uint32_t>("manamax");
+	}
+	return stats;
 }

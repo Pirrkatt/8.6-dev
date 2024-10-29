@@ -22,6 +22,16 @@
 
 #include "networkmessage.h"
 #include "protocol.h"
+#include "database.h"
+
+struct PlayerResourceInfo {
+	uint32_t health;
+	uint32_t healthMax;
+	uint32_t mana;
+	uint32_t manaMax;
+
+	PlayerResourceInfo() : health(0), healthMax(0), mana(0), manaMax(0) {}
+};
 
 class ProtocolStatus final : public Protocol
 {
@@ -39,12 +49,15 @@ class ProtocolStatus final : public Protocol
 		void onRecvFirstMessage(NetworkMessage& msg) final;
 
 		void sendStatusString();
-		void sendInfo(uint16_t requestedInfo, const std::string& characterName);
+		void sendInfo(uint16_t requestedInfo, const std::vector<std::string>& characterNames);
 
 		static const uint64_t start;
 
 	protected:
 		static std::map<uint32_t, int64_t> ipConnectMap;
+
+	private:
+		static PlayerResourceInfo getHealthManaInfo(const std::string& name);
 };
 
 #endif
