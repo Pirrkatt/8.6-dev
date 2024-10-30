@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spells>
+	<instant group="attack" name="KiBlast" words="kiblast" lvl="1" mana="1" prem="0" casterTargetOrDirection="1" exhaustion="0" needlearn="0" script="attack/kiblast.lua">
+		<vocation name="Sorcerer"/>
+	</instant>
 	<instant group="attack" name="Berserk" words="exori" lvl="35" mana="115" prem="1" needweapon="1" exhaustion="2000" needlearn="0" script="attack/berserk.lua">
 		<vocation name="Knight"/>
 		<vocation name="Elite Knight"/>

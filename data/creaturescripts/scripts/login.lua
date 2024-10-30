@@ -40,5 +40,6 @@ function onLogin(player)
 	player:registerEvent("AutoLootOpCode")
 	player:registerEvent("AutoLoot")
 	player:registerEvent("Shop")
+	player:registerEvent("KiBlastOpCode")
 	return true
 end
