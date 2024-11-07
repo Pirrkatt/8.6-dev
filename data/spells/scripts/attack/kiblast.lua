@@ -5,14 +5,11 @@ local config = {
     totalTime = 10, -- Total time player have to select a spell
     cycleDelay = 500, -- Time between each icon cycle in milliseconds
 
-    combatType = COMBAT_ENERGYDAMAGE,
-    magicEffect = CONST_ME_ENERGYAREA,
     damageFactors = {
         small = 0.6,
         normal = 1.0,
         moderate = 1.2,
     },
-
     pushTiles = 2, -- Tiles to push the creature
     stunTime = 2, -- Stun duration in seconds
     delayFactor = 80, -- Milliseconds per tile of distance
@@ -25,6 +22,35 @@ local highDmgArea = createCombatArea({
     {1, 2, 1},
     {1, 1, 1},
 })
+
+local blockedCreatures = {"Demon", "Rotworm"}
+
+local spellData = {
+    [1] = {
+        combatType = COMBAT_ENERGYDAMAGE,
+        distEffect = CONST_ANI_ENERGY,
+        magicEffect = CONST_ME_ENERGYAREA,
+        damageFactor = config.damageFactors.normal,
+    },
+    [2] = {
+        combatType = COMBAT_FIREDAMAGE,
+        distEffect = CONST_ANI_FIRE,
+        magicEffect = CONST_ME_FIREATTACK,
+        damageFactor = config.damageFactors.small,
+    },
+    [3] = {
+        combatType = COMBAT_POISONDAMAGE,
+        distEffect = CONST_ANI_POISON,
+        magicEffect = CONST_ME_SMALLPLANTS,
+        damageFactor = config.damageFactors.moderate,
+    },
+    [4] = {
+        combatType = COMBAT_ICEDAMAGE,
+        distEffect = CONST_ANI_SMALLICE,
+        magicEffect = CONST_ME_ICEAREA,
+        damageFactor = config.damageFactors.small,
+    },
+}
 
 local function sendExtendedJson(player, action, data)
 	if data == nil then
@@ -96,7 +122,7 @@ end
 
 local function applyHighDamage(player, target, minDmg, maxDmg)
     if player and target then
-        doAreaCombatHealth(player, config.combatType, target:getPosition(), highDmgArea, -(minDmg/2), -(maxDmg/2), config.magicEffect)
+        doAreaCombatHealth(player, spellData[1].combatType, target:getPosition(), highDmgArea, -(minDmg/2), -(maxDmg/2), CONST_ME_NONE)
     end
 end
 
@@ -112,7 +138,12 @@ local function applyPushStun(player, target)
         addEvent(function(pid, tid)
             local player = Player(pid)
             local target = Creature(tid)
+
             if player and target then
+                if table.contains(blockedCreatures, target:getName()) then
+                    return
+                end
+
                 pushTarget(player, target)
             end
         end, 200 * (i-1), player:getId(), target:getId())
@@ -126,12 +157,12 @@ local function applyHealthRestore(player)
     end
 end
 
-local spellData = {
-    [1] = { damageFactor = config.damageFactors.normal, func = applyHighDamage },
-    [2] = { damageFactor = config.damageFactors.small, func = applyManaRestore },
-    [3] = { damageFactor = config.damageFactors.moderate, func = applyPushStun },
-    [4] = { damageFactor = config.damageFactors.small, func = applyHealthRestore },
-}
+spellData[1].func = applyHighDamage
+spellData[2].func = applyManaRestore
+spellData[3].func = applyPushStun
+spellData[4].func = applyHealthRestore
+
+--------------------------------------------------------------------------------------------
 
 local function castSpell(player, variant, spellId)
 	if not player then return end
@@ -145,7 +176,7 @@ local function castSpell(player, variant, spellId)
     local distance = playerPos:getDistance(targetPos)
     local milliseconds = distance * config.delayFactor
 
-    playerPos:sendDistanceEffect(targetPos, 17)
+    playerPos:sendDistanceEffect(targetPos, spell.distEffect)
 
     addEvent(function(playerId)
         local player = Player(playerId)
@@ -162,7 +193,7 @@ local function castSpell(player, variant, spellId)
 
         -- local effectPosition = targetPos + Position(1, 1, 0)
         -- effectPosition:sendMagicEffect(985)
-        doTargetCombatHealth(player, target, config.combatType, -minDmg, -maxDmg, config.magicEffect)
+        doTargetCombatHealth(player, target, spell.combatType, -minDmg, -maxDmg, spell.magicEffect)
         spell.func(player, target, minDmg, maxDmg)
     end, milliseconds, player:getId())
 end
