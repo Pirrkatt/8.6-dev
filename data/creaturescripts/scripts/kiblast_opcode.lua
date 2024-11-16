@@ -1,15 +1,10 @@
 local opCode = 66
 
-function onExtendedOpcode(player, opcode, json_data)
+function onExtendedOpcode(player, opcode, result)
 	if opcode == opCode then
-		json_data = json.decode(json_data)
-
-		local action = json_data["action"]
-		local data = json_data["data"]
-
-		if action == 'result' then
-			KIBLAST_DATA[player:getId()] = data
-			return
+		if not KIBLAST_DATA[player:getId()] then
+			error("KIBLAST_DATA entry for playerId: " .. player:getId() .. " does not exist!")
 		end
+		KIBLAST_DATA[player:getId()].spellId = tonumber(result)
 	end
 end
