@@ -43,5 +43,6 @@ function onLogin(player)
 	player:registerEvent("KiBlastOpCode")
 	player:registerEvent("ImmunityHealth")
 	player:registerEvent("ImmunityMana")
+	player:registerEvent("Crafting")
 	return true
 end

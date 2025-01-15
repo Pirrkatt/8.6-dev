@@ -14,4 +14,5 @@
 	<event type="extendedopcode" name="Shop" script="shop.lua" />
 	<event type="healthchange" name="ImmunityHealth" script="immunity.lua" />
 	<event type="manachange" name="ImmunityMana" script="immunity.lua" />
+	<event type="extendedopcode" name="Crafting" script="crafting/crafting.lua" />
 </creaturescripts>
