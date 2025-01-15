@@ -5,7 +5,7 @@ hotkeyAimbotEnabled = true
 protectionLevel = 1
 killsToRedSkull = 3
 killsToBlackSkull = 6
-pzLocked = 60000
+pzLocked = 1000
 removeChargesFromRunes = true
 timeToDecreaseFrags = 24 * 60 * 60 * 1000
 whiteSkullTime = 15 * 60 * 1000
@@ -54,7 +54,7 @@ mysqlHost = "127.0.0.1"
 mysqlUser = "tibiajob"
 mysqlPass = "tibiajob"
 mysqlDatabase = "tibiajob8.6"
-mysqlPort = 3306
+mysqlPort = 3307
 mysqlSock = ""
 
 -- Misc.
