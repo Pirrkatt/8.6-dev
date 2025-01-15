@@ -12,4 +12,6 @@
 	<event type="extendedopcode" name="KiBlastOpCode" script="kiblast_opcode.lua" />
 	<event type="kill" name="AutoLoot" script="autoloot.lua" />
 	<event type="extendedopcode" name="Shop" script="shop.lua" />
+	<event type="healthchange" name="ImmunityHealth" script="immunity.lua" />
+	<event type="manachange" name="ImmunityMana" script="immunity.lua" />
 </creaturescripts>

@@ -2,6 +2,7 @@
 <actions>
 	<!-- Systems -->
 	<action itemid="2153" script="systems/autoloot_stone.lua" />
+	<action itemid="10577" script="systems/stopwatch.lua" />
 
 	<!-- Quests -->
 	<action itemid="1740" script="quests/quests.lua" />

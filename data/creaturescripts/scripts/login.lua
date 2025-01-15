@@ -41,5 +41,7 @@ function onLogin(player)
 	player:registerEvent("AutoLoot")
 	player:registerEvent("Shop")
 	player:registerEvent("KiBlastOpCode")
+	player:registerEvent("ImmunityHealth")
+	player:registerEvent("ImmunityMana")
 	return true
 end
