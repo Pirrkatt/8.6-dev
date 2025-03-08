@@ -1,4 +1,5 @@
 Crafting = {}
+local CODE_CRAFTING = 107
 
 dofile("data/creaturescripts/scripts/crafting/weapons.lua")
 dofile("data/creaturescripts/scripts/crafting/equipment.lua")
@@ -11,7 +12,7 @@ dofile("data/creaturescripts/scripts/crafting/others.lua")
 local fetchLimit = 10
 
 function onExtendedOpcode(player, opcode, buffer)
-  if opcode == ExtendedOPCodes.CODE_CRAFTING then
+  if opcode == CODE_CRAFTING then
     local status, json_data =
       pcall(
       function()
@@ -27,17 +28,27 @@ function onExtendedOpcode(player, opcode, buffer)
     local data = json_data.data
 
     if action == "fetch" then
+      Crafting:sendCrafts(player, "legs")
       Crafting:sendCrafts(player, "weapons")
       Crafting:sendCrafts(player, "equipment")
       Crafting:sendCrafts(player, "potions")
-      Crafting:sendCrafts(player, "legs")
       Crafting:sendCrafts(player, "upgradeables")
       Crafting:sendCrafts(player, "others")
     elseif action == "craft" then
       Crafting:craft(player, data.category, data.craftId)
+    elseif action == "show" then
+      player:showCrafting()
     end
   end
   return true
+end
+
+function Crafting:sendCurrency(player)
+  local money = player:getMoney()
+  player:sendExtendedOpcode(
+    CODE_CRAFTING,
+    json.encode({action = "currency", data = {currency = money}})
+  )
 end
 
 function Crafting:sendCrafts(player, category)
@@ -78,17 +89,17 @@ function Crafting:sendCrafts(player, category)
     local x = 1
     for i = 1, math.floor(#data / fetchLimit) do
       player:sendExtendedOpcode(
-        ExtendedOPCodes.CODE_CRAFTING,
+        CODE_CRAFTING,
         json.encode({action = "fetch", data = {category = category, crafts = {unpack(data, x, math.min(x + fetchLimit - 1, #data))}}})
       )
       x = x + fetchLimit
     end
 
     if x < #data then
-      player:sendExtendedOpcode(ExtendedOPCodes.CODE_CRAFTING, json.encode({action = "fetch", data = {category = category, crafts = {unpack(data, x, #data)}}}))
+      player:sendExtendedOpcode(CODE_CRAFTING, json.encode({action = "fetch", data = {category = category, crafts = {unpack(data, x, #data)}}}))
     end
   else
-    player:sendExtendedOpcode(ExtendedOPCodes.CODE_CRAFTING, json.encode({action = "fetch", data = {category = category, crafts = data}}))
+    player:sendExtendedOpcode(CODE_CRAFTING, json.encode({action = "fetch", data = {category = category, crafts = data}}))
   end
 end
 
@@ -123,7 +134,7 @@ function Crafting:craft(player, category, craftId)
 
       Crafting:sendMaterials(player, category)
       player:addAchievement("crafter")
-      player:sendExtendedOpcode(ExtendedOPCodes.CODE_CRAFTING, json.encode({action = "crafted"}))
+      player:sendExtendedOpcode(CODE_CRAFTING, json.encode({action = "crafted"}))
     end
   end
 end
@@ -144,7 +155,7 @@ function Crafting:sendMaterials(player, category)
     local x = 1
     for i = 1, math.floor(#data / fetchLimit) do
       player:sendExtendedOpcode(
-        ExtendedOPCodes.CODE_CRAFTING,
+        CODE_CRAFTING,
         json.encode({action = "materials", data = {category = category, from = x, materials = {unpack(data, x, math.min(x + fetchLimit - 1, #data))}}})
       )
       x = x + fetchLimit
@@ -152,21 +163,22 @@ function Crafting:sendMaterials(player, category)
 
     if x < #data then
       player:sendExtendedOpcode(
-        ExtendedOPCodes.CODE_CRAFTING,
+        CODE_CRAFTING,
         json.encode({action = "materials", data = {category = category, from = x, materials = {unpack(data, x, #data)}}})
       )
     end
   else
-    player:sendExtendedOpcode(ExtendedOPCodes.CODE_CRAFTING, json.encode({action = "materials", data = {category = category, from = 1, materials = data}}))
+    player:sendExtendedOpcode(CODE_CRAFTING, json.encode({action = "materials", data = {category = category, from = 1, materials = data}}))
   end
 end
 
 function Player:showCrafting()
+  Crafting:sendCurrency(self)
+  Crafting:sendMaterials(self, "legs")
   Crafting:sendMaterials(self, "weapons")
   Crafting:sendMaterials(self, "equipment")
   Crafting:sendMaterials(self, "potions")
-  Crafting:sendMaterials(self, "legs")
   Crafting:sendMaterials(self, "upgradeables")
   Crafting:sendMaterials(self, "others")
-  self:sendExtendedOpcode(ExtendedOPCodes.CODE_CRAFTING, json.encode({action = "show"}))
+  self:sendExtendedOpcode(CODE_CRAFTING, json.encode({action = "show"}))
 end
