@@ -213,9 +213,11 @@ if NpcHandler == nil then
 			self:processModuleCallback(CALLBACK_ONRELEASEFOCUS, focus)
 		end
 
-		if Player(focus) ~= nil then
+		local player = Player(focus)
+		if player ~= nil then
 			closeShopWindow(focus) --Even if it can not exist, we need to prevent it.
 			self:updateFocus()
+			NpcDialogue.sendCancelDialogue(player)
 		end
 	end
 
@@ -507,6 +509,11 @@ if NpcHandler == nil then
 		if self:isInRange(cid) then
 			if not self:isFocused(cid) then
 				self:greet(cid)
+
+				local player = Player(cid)
+				if player then
+					NpcDialogue.sendStartDialogue(player)
+				end
 				return
 			end
 		end
@@ -536,14 +543,23 @@ if NpcHandler == nil then
 					local message_male = self:parseMessage(msg_male, parseInfo)
 					local msg_female = self:getMessage(MESSAGE_WALKAWAY_FEMALE)
 					local message_female = self:parseMessage(msg_female, parseInfo)
+
+					local npc = Npc()
+					if npc == nil then
+						return
+					end
+
 					if message_female ~= message_male then
 						if playerSex == PLAYERSEX_FEMALE then
 							selfSay(message_female)
+							NpcDialogue.sendDialogue(player, message_female, npc:getName(), npc:getOutfit())
 						else
 							selfSay(message_male)
+							NpcDialogue.sendDialogue(player, message_male, npc:getName(), npc:getOutfit())
 						end
 					elseif message ~= "" then
 						selfSay(message)
+						NpcDialogue.sendDialogue(player, message, npc:getName(), npc:getOutfit())
 					end
 					self:resetNpc(cid)
 					self:releaseFocus(cid)
@@ -619,6 +635,7 @@ if NpcHandler == nil then
 			local player = Player(focusId)
 			if player then
 				npc:say(message, TALKTYPE_PRIVATE_NP, false, player, npc:getPosition())
+				NpcDialogue.sendDialogue(player, message, npc:getName(), npc:getOutfit())
 			end
 		end, self.talkDelayTime * 1000, Npc():getId(), message, focus)
 	end

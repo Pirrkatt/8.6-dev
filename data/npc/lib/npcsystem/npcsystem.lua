@@ -16,6 +16,7 @@ npcs_loaded_travel = {}
 
 if NpcSystem == nil then
 	-- Loads the underlying classes of the npcsystem.
+	dofile('data/npc/lib/npcsystem/npcdialogue.lua')
 	dofile('data/npc/lib/npcsystem/keywordhandler.lua')
 	dofile('data/npc/lib/npcsystem/npchandler.lua')
 	dofile('data/npc/lib/npcsystem/modules.lua')
