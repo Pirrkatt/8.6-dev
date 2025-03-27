@@ -7,7 +7,7 @@ if NpcHandler == nil then
 	TALKDELAY_EVENT = 2 -- Not yet implemented
 
 	-- Currently applied talkdelay behavior. TALKDELAY_ONTHINK is default.
-	NPCHANDLER_TALKDELAY = TALKDELAY_ONTHINK
+	NPCHANDLER_TALKDELAY = TALKDELAY_NONE
 
 	-- Constant indexes for defining default messages.
 	MESSAGE_GREET = 1 -- When the player greets the npc.
@@ -329,7 +329,7 @@ if NpcHandler == nil then
 				local parseInfo = { [TAG_PLAYERNAME] = playerName }
 				self:resetNpc(cid)
 				msg = self:parseMessage(msg, parseInfo)
-				self:say(msg, cid, true)
+				self:say(msg, cid, true, true, 6000, false, true) -- Last true is for cancelling conversation and don't send new talk stuff (not implemented yet)
 				self:releaseFocus(cid)
 			end
 		end
@@ -479,7 +479,7 @@ if NpcHandler == nil then
 	function NpcHandler:onThink()
 		local callback = self:getCallback(CALLBACK_ONTHINK)
 		if callback == nil or callback() then
-			if NPCHANDLER_TALKDELAY == TALKDELAY_ONTHINK then
+			if NPCHANDLER_TALKDELAY == TALKDELAY_NONE then
 				for cid, talkDelay in pairs(self.talkDelay) do
 					if talkDelay.time ~= nil and talkDelay.message ~= nil and os.time() >= talkDelay.time then
 						selfSay(talkDelay.message, cid, talkDelay.publicize and true or false)
@@ -611,7 +611,7 @@ if NpcHandler == nil then
 	-- Makes the npc represented by this instance of NpcHandler say something.
 	--	This implements the currently set type of talkdelay.
 	--	shallDelay is a boolean value. If it is false, the message is not delayed. Default value is true.
-	function NpcHandler:say(message, focus, publicize, shallDelay, delay)
+	function NpcHandler:say(message, focus, publicize, shallDelay, delay, replyOptions)
 		if type(message) == "table" then
 			return self:doNPCTalkALot(message, delay or 6000, focus)
 		end
@@ -622,7 +622,7 @@ if NpcHandler == nil then
 
 		local shallDelay = not shallDelay and true or shallDelay
 		if NPCHANDLER_TALKDELAY == TALKDELAY_NONE or shallDelay == false then
-			selfSay(message, focus, publicize and true or false)
+			selfSay(message, focus, publicize and true or false, replyOptions)
 			return
 		end
 

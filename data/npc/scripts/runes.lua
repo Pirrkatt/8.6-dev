@@ -109,7 +109,7 @@ function creatureSayCallback(cid, type, msg)
 		local vocationId = player:getVocation():getId()
 		if isInArray({1, 2, 5, 6}, vocationId) then
 			if player:getStorageValue(30002) == -1 then
-				selfSay('So you ask me for a {' .. ItemType(items[vocationId]):getName() .. '} to begin your advanture?', cid)
+				selfSay('So you ask me for a ' .. ItemType(items[vocationId]):getName() .. ' to begin your advanture?', cid, false, true)
 				npcHandler.topic[cid] = 1
 			else
 				selfSay('What? I have already gave you one {' .. ItemType(items[vocationId]):getName() .. '}!', cid)

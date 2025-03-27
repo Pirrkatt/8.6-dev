@@ -33,7 +33,7 @@ end
 -- Store original C++ selfSay function
 local _selfSay = selfSay
 
-function selfSay(words, target)
+function selfSay(words, target, publicize, replyOptions)
 	_selfSay(words, target)
 
 	if not target then
@@ -51,6 +51,10 @@ function selfSay(words, target)
 	local npc = Npc()
 	if npc == nil then
 		return
+	end
+
+	if replyOptions then
+		words = words .. "\n{Yes}\n{No}"
 	end
 
 	NpcDialogue.sendDialogue(target, words, npc:getName(), npc:getOutfit())
