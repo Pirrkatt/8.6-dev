@@ -329,7 +329,7 @@ if NpcHandler == nil then
 				local parseInfo = { [TAG_PLAYERNAME] = playerName }
 				self:resetNpc(cid)
 				msg = self:parseMessage(msg, parseInfo)
-				self:say(msg, cid, true, true, 6000, false, true) -- Last true is for cancelling conversation and don't send new talk stuff (not implemented yet)
+				self:say(msg, cid, true)
 				self:releaseFocus(cid)
 			end
 		end
@@ -508,12 +508,12 @@ if NpcHandler == nil then
 	function NpcHandler:onGreet(cid)
 		if self:isInRange(cid) then
 			if not self:isFocused(cid) then
-				self:greet(cid)
-
 				local player = Player(cid)
 				if player then
 					NpcDialogue.sendStartDialogue(player)
 				end
+
+				self:greet(cid)
 				return
 			end
 		end
