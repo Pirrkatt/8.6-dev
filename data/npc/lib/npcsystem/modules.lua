@@ -532,7 +532,8 @@ if Modules == nil then
 		noNode = nil,
 		noText = "",
 		maxCount = 100,
-		amount = 0
+		amount = 0,
+		tradeActivated = nil,
 	}
 
 	-- Add it to the parseable module list.
@@ -722,6 +723,7 @@ if Modules == nil then
 		self.noText = handler:getMessage(MESSAGE_DECLINE)
 
 		if SHOPMODULE_MODE ~= SHOPMODULE_MODE_TALK then
+			self.tradeActivated = true
 			for i, word in pairs(SHOP_TRADEREQUEST) do
 				local obj = {}
 				obj[#obj + 1] = word

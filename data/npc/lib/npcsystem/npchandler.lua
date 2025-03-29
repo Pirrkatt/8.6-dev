@@ -618,6 +618,15 @@ if NpcHandler == nil then
 	--	shallDelay is a boolean value. If it is false, the message is not delayed. Default value is true.
 	-- 	buttons is a table with buttons used for NpcDialogue
 	function NpcHandler:say(message, focus, publicize, shallDelay, delay, buttons)
+		-- Remember this does not apply if we're using selfSay function within NPC Lua file, then you still have to add "Trade" to the buttons table in there manually
+		for _, v in pairs(self.modules) do
+			if v.tradeActivated then
+				buttons = buttons or {}
+				buttons[#buttons+1] = "Trade"
+				break
+			end
+		end
+
 		if type(message) == "table" then
 			return self:doNPCTalkALot(message, delay or 6000, focus)
 		end
