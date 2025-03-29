@@ -148,6 +148,11 @@ if NpcHandler == nil then
 			self:processModuleCallback(CALLBACK_ONADDFOCUS, newFocus)
 		end
 		self:updateFocus()
+
+		local player = Player(newFocus)
+		if player then
+			NpcDialogue.sendStartDialogue(player)
+		end
 	end
 
 	-- Function used to verify if npc is focused to certain player
@@ -611,7 +616,8 @@ if NpcHandler == nil then
 	-- Makes the npc represented by this instance of NpcHandler say something.
 	--	This implements the currently set type of talkdelay.
 	--	shallDelay is a boolean value. If it is false, the message is not delayed. Default value is true.
-	function NpcHandler:say(message, focus, publicize, shallDelay, delay, replyOptions)
+	-- 	buttons is a table with buttons used for NpcDialogue
+	function NpcHandler:say(message, focus, publicize, shallDelay, delay, buttons)
 		if type(message) == "table" then
 			return self:doNPCTalkALot(message, delay or 6000, focus)
 		end
@@ -622,7 +628,7 @@ if NpcHandler == nil then
 
 		local shallDelay = not shallDelay and true or shallDelay
 		if NPCHANDLER_TALKDELAY == TALKDELAY_NONE or shallDelay == false then
-			selfSay(message, focus, publicize and true or false, replyOptions)
+			selfSay(message, focus, publicize and true or false, buttons)
 			return
 		end
 
@@ -635,7 +641,7 @@ if NpcHandler == nil then
 			local player = Player(focusId)
 			if player then
 				npc:say(message, TALKTYPE_PRIVATE_NP, false, player, npc:getPosition())
-				NpcDialogue.sendDialogue(player, message, npc:getName(), npc:getOutfit())
+				NpcDialogue.sendDialogue(player, message, npc:getName(), npc:getOutfit(), buttons)
 			end
 		end, self.talkDelayTime * 1000, Npc():getId(), message, focus)
 	end

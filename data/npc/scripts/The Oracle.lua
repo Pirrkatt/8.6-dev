@@ -22,6 +22,8 @@ local function greetCallback(cid)
 		return false
 	elseif player:getVocation():getId() > 0 then
 		npcHandler:say("YOU ALREADY HAVE A VOCATION!", cid)
+		-- Example for manually cancelling dialogue
+		NpcDialogue.sendCancelDialogue(player)
 		return false
 	end
 	return true
