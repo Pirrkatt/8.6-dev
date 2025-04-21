@@ -3,5 +3,7 @@ function onLogout(player)
 	if nextUseStaminaTime[playerId] ~= nil then
 		nextUseStaminaTime[playerId] = nil
 	end
+
+	Arena:onLogout(player)
 	return true
 end

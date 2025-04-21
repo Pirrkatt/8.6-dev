@@ -44,5 +44,7 @@ function onLogin(player)
 	player:registerEvent("ImmunityHealth")
 	player:registerEvent("ImmunityMana")
 	player:registerEvent("Crafting")
+	player:registerEvent("PvpArena")
+	player:registerEvent("PvpArenaKill")
 	return true
 end

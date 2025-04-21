@@ -1084,6 +1084,19 @@ void ProtocolGame::sendCreatureShield(const Creature* creature)
 	writeToOutputBuffer(msg);
 }
 
+void ProtocolGame::sendCreaturePvpRank(const Creature* creature)
+{
+	if (!canSee(creature)) {
+		return;
+	}
+
+	NetworkMessage msg;
+	msg.addByte(0x3E);
+	msg.add<uint32_t>(creature->getID());
+	msg.addByte(creature->getPlayer()->getPvpRank());
+	writeToOutputBuffer(msg);
+}
+
 void ProtocolGame::sendCreatureSkull(const Creature* creature)
 {
 	if (g_game.getWorldType() != WORLD_TYPE_PVP) {
@@ -2066,6 +2079,7 @@ void ProtocolGame::AddCreature(NetworkMessage& msg, const Creature* creature, bo
 
 	msg.addByte(player->getSkullClient(otherPlayer));
 	msg.addByte(player->getPartyShield(otherPlayer));
+	msg.addByte(otherPlayer->getPvpRank());
 	msg.addByte(creature->isAutoLooter());
 
 	if (!known) {

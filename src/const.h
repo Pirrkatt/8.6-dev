@@ -375,6 +375,15 @@ enum PartyShields_t : uint8_t {
 	SHIELD_YELLOW_NOSHAREDEXP = 10,
 };
 
+enum PvpRanks_t : uint8_t {
+	PVPRANK_NONE = 0,
+	PVPRANK_B = 1,
+	PVPRANK_C = 2,
+	PVPRANK_A = 3,
+	PVPRANK_S = 4,
+	PVPRANK_Z = 5,
+};
+
 enum GuildEmblems_t : uint8_t {
 	GUILDEMBLEM_NONE = 0,
 	GUILDEMBLEM_ALLY = 1,

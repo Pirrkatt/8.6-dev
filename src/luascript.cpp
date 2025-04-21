@@ -1478,6 +1478,13 @@ void LuaScriptInterface::registerFunctions()
 	registerEnum(SKULL_RED)
 	registerEnum(SKULL_BLACK)
 
+	registerEnum(PVPRANK_NONE)
+	registerEnum(PVPRANK_B)
+	registerEnum(PVPRANK_C)
+	registerEnum(PVPRANK_A)
+	registerEnum(PVPRANK_S)
+	registerEnum(PVPRANK_Z)
+
 	registerEnum(TALKTYPE_SAY)
 	registerEnum(TALKTYPE_WHISPER)
 	registerEnum(TALKTYPE_YELL)
@@ -2162,6 +2169,9 @@ void LuaScriptInterface::registerFunctions()
 	registerMethod("Player", "getContainerId", LuaScriptInterface::luaPlayerGetContainerId);
 	registerMethod("Player", "getContainerById", LuaScriptInterface::luaPlayerGetContainerById);
 	registerMethod("Player", "getContainerIndex", LuaScriptInterface::luaPlayerGetContainerIndex);
+
+	registerMethod("Player", "getPvpRank", LuaScriptInterface::luaPlayerGetPvpRank);
+	registerMethod("Player", "setPvpRank", LuaScriptInterface::luaPlayerSetPvpRank);
 
 	// Monster
 	registerClass("Monster", "Creature", LuaScriptInterface::luaMonsterCreate);
@@ -8880,6 +8890,31 @@ int LuaScriptInterface::luaPlayerGetContainerIndex(lua_State* L)
 	Player* player = getUserdata<Player>(L, 1);
 	if (player) {
 		lua_pushnumber(L, player->getContainerIndex(getNumber<uint8_t>(L, 2)));
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int LuaScriptInterface::luaPlayerGetPvpRank(lua_State* L)
+{
+	// player:getPvpRank()
+	Player* player = getUserdata<Player>(L, 1);
+	if (player) {
+		lua_pushnumber(L, player->getPvpRank());
+	} else {
+		lua_pushnil(L);
+	}
+	return 1;
+}
+
+int LuaScriptInterface::luaPlayerSetPvpRank(lua_State* L)
+{
+	// player:setPvpRank(rank)
+	Player* player = getUserdata<Player>(L, 1);
+	if (player) {
+		player->setPvpRank(getNumber<PvpRanks_t>(L, 2));
+		pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
 	}

@@ -286,6 +286,12 @@ class Player final : public Creature, public Cylinder
 
 		GuildEmblems_t getGuildEmblem(const Player* player) const;
 
+		PvpRanks_t getPvpRank() const {
+			return pvpRank;
+		}
+
+		void setPvpRank(PvpRanks_t newRank);
+
 		uint64_t getSpentMana() const {
 			return manaSpent;
 		}
@@ -778,6 +784,11 @@ class Player final : public Creature, public Cylinder
 				client->sendCreatureShield(creature);
 			}
 		}
+		void sendCreaturePvpRank(const Creature* creature) {
+			if (client) {
+				client->sendCreaturePvpRank(creature);
+			}
+		}
 		void sendAnimatedText(const std::string& message, const Position& pos, TextColor_t color) {
 			if (client) {
 				client->sendAnimatedText(message, pos, color);
@@ -1180,6 +1191,7 @@ class Player final : public Creature, public Cylinder
 		chaseMode_t chaseMode;
 		fightMode_t fightMode;
 		AccountType_t accountType;
+		PvpRanks_t pvpRank;
 
 		bool secureMode;
 		bool ghostMode;

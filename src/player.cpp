@@ -131,6 +131,7 @@ Player::Player(ProtocolGame_ptr p) :
 
 	skullTicks = 0;
 	party = nullptr;
+	pvpRank = PVPRANK_NONE;
 
 	bankBalance = 0;
 
@@ -4053,6 +4054,11 @@ GuildEmblems_t Player::getGuildEmblem(const Player* player) const
 	}
 
 	return GUILDEMBLEM_NEUTRAL;
+}
+
+void Player::setPvpRank(PvpRanks_t newRank) {
+	pvpRank = newRank;
+	g_game.updatePlayerPvpRank(this);
 }
 
 bool Player::addOfflineTrainingTries(skills_t skill, uint64_t tries)

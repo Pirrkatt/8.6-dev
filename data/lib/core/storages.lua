@@ -14,7 +14,8 @@ PlayerStorageKeys = {
 		skinListLast = 2199, -- Not used, just for indication
 		itemListBase = 2200,
 		itemListLast = 2299, -- Not used, just for indication
-	}
+	},
+	pvpArenaLP = 2400,
 }
 
 GlobalStorageKeys = {

@@ -15,4 +15,6 @@
 	<event type="healthchange" name="ImmunityHealth" script="immunity.lua" />
 	<event type="manachange" name="ImmunityMana" script="immunity.lua" />
 	<event type="extendedopcode" name="Crafting" script="crafting/crafting.lua" />
+	<event type="extendedopcode" name="PvpArena" script="pvparena/pvparena.lua" />
+	<event type="preparedeath" name="PvpArenaKill" script="pvparena/arena_game.lua" />
 </creaturescripts>

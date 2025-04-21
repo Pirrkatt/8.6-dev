@@ -4303,6 +4303,15 @@ void Game::updatePlayerShield(Player* player)
 	}
 }
 
+void Game::updatePlayerPvpRank(Player* player)
+{
+	SpectatorVec list;
+	map.getSpectators(list, player->getPosition(), true, true);
+	for (Creature* spectator : list) {
+		spectator->getPlayer()->sendCreaturePvpRank(player);
+	}
+}
+
 void Game::updatePremium(Account& account)
 {
 	bool save = false;

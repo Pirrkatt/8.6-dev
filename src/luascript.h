@@ -930,6 +930,9 @@ class LuaScriptInterface
 		static int luaPlayerGetContainerById(lua_State* L);
 		static int luaPlayerGetContainerIndex(lua_State* L);
 
+		static int luaPlayerGetPvpRank(lua_State* L);
+		static int luaPlayerSetPvpRank(lua_State* L);
+
 		// Monster
 		static int luaMonsterCreate(lua_State* L);
 

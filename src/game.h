@@ -405,6 +405,7 @@ class Game
 		void changeLight(const Creature* creature);
 		void updateCreatureSkull(const Creature* player);
 		void updatePlayerShield(Player* player);
+		void updatePlayerPvpRank(Player* player);
 		void updateCreatureWalkthrough(const Creature* creature);
 
 		GameState_t getGameState() const;
