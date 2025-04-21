@@ -1,6 +1,3 @@
--- Problems:
--- Right now we the queue can be manipulated since first who joins gets on the same team always (if possible)
-
 -- COULD ADD:
 -- End screen (winner, lp gain/loss)
 -- Add rank icons to battle as well
@@ -216,7 +213,6 @@ function Arena:validateEntry(entry)
 end
 
 local function findBalancedTeams(queue, maxTeamSize)
-    print(#queue) -- 3 if party
     local results = {}
 
     local function clone(tbl)
@@ -242,22 +238,36 @@ local function findBalancedTeams(queue, maxTeamSize)
         local group = queue[index]
         local groupSize = #group
 
-        -- Try putting group in team1
-        if #team1 + groupSize <= maxTeamSize then
-            local newTeam1 = clone(team1)
-            for _, p in ipairs(group) do table.insert(newTeam1, p) end
+        -- Randomize order of team assignment
+        local tryTeam1First = math.random() < 0.5
+
+        local firstTryTeam = tryTeam1First and team1 or team2
+        local secondTryTeam = tryTeam1First and team2 or team1
+
+        -- Try placing group in first random team
+        if #firstTryTeam + groupSize <= maxTeamSize then
+            local newTeam = clone(firstTryTeam)
+            for _, p in ipairs(group) do table.insert(newTeam, p) end
             local newUsed = clone(used)
             table.insert(newUsed, index)
-            if backtrack(index + 1, newTeam1, team2, newUsed) then return true end
+            if tryTeam1First then
+                if backtrack(index + 1, newTeam, team2, newUsed) then return true end
+            else
+                if backtrack(index + 1, team1, newTeam, newUsed) then return true end
+            end
         end
 
-        -- Try putting group in team2
-        if #team2 + groupSize <= maxTeamSize then
-            local newTeam2 = clone(team2)
-            for _, p in ipairs(group) do table.insert(newTeam2, p) end
+        -- Try placing group in second random team
+        if #secondTryTeam + groupSize <= maxTeamSize then
+            local newTeam = clone(secondTryTeam)
+            for _, p in ipairs(group) do table.insert(newTeam, p) end
             local newUsed = clone(used)
             table.insert(newUsed, index)
-            if backtrack(index + 1, team1, newTeam2, newUsed) then return true end
+            if not tryTeam1First then
+                if backtrack(index + 1, newTeam, team2, newUsed) then return true end
+            else
+                if backtrack(index + 1, team1, newTeam, newUsed) then return true end
+            end
         end
 
         -- Try skipping this group
