@@ -4,6 +4,6 @@ function onLogout(player)
 		nextUseStaminaTime[playerId] = nil
 	end
 
-	Arena:onLogout(player)
+	Arena:onLogout(playerId)
 	return true
 end

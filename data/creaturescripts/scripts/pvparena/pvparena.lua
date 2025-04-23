@@ -1,11 +1,3 @@
--- COULD ADD:
--- End screen (winner, lp gain/loss)
--- Add rank icons to battle as well
--- Reset skull when game ends or do we add pvp area in RME?
--- No logout in RME?
--- Not sure how creating new characters would act in database
--- Visually show which queues we are applied to
-
 dofile("data/creaturescripts/scripts/pvparena/arena_game.lua")
 
 Arena = {
@@ -15,9 +7,10 @@ Arena = {
         ["4x4"] = {},
         ["5x5"] = {}
     },
-    -- queuedPlayers = {}, -- Could be used for O(1) lookups when leaving queue etc
+    queuedPlayers = {}, -- [playerId] = {mode = x, queueId = y}
     matches = {}, -- [matchId] = Match Instance
     matchIdCounter = 0,
+    queueIdCounter = 0,
     playersInGame = {},
     hasWindowOpen = {},
 }
@@ -67,6 +60,8 @@ function onExtendedOpcode(player, opcode, buffer)
             table.removeValue(Arena.hasWindowOpen, player:getId())
         elseif action == "joinQueue" then
             Arena:joinQueue(player, data.mode)
+        elseif action == "leaveQueue" then
+            Arena:leaveQueue(player)
         elseif action == "arenaStatus" then
             player:sendArenaStatus(data.mode)
         end
@@ -74,23 +69,20 @@ function onExtendedOpcode(player, opcode, buffer)
     return true
 end
 
-function Arena:leaveAllQueues(player, reason)
-    self:leaveQueue(player, "2x2", reason)
-    self:leaveQueue(player, "3x3", reason)
-    self:leaveQueue(player, "4x4", reason)
-    self:leaveQueue(player, "5x5", reason)
-end
-
 function Arena:onPartySizeChange(party)
-    self:leaveAllQueues(party:getLeader(), "party")
-
-    for _, member in pairs(party:getMembers()) do
-        self:leaveAllQueues(member, "party")
+    self:leaveQueue(party:getLeader())
+    for _, playerId in pairs(party:getMembers()) do
+        self:leaveQueue(playerId)
     end
 end
 
-function Arena:onLogout(player)
-    self:leaveAllQueues(player, "logout")
+function Arena:onLogout(playerId)
+    self:leaveQueue(playerId)
+end
+
+local function isInPz(player)
+    local tile = Tile(player:getPosition())
+    return tile:hasFlag(TILESTATE_PROTECTIONZONE)
 end
 
 function Arena:joinQueue(player, mode)
@@ -100,6 +92,16 @@ function Arena:joinQueue(player, mode)
 
     if self.playersInGame[player:getId()] then
         player:sendCancelMessage("You can not join a queue while inside the arena.")
+        return false
+    end
+
+    if self.queuedPlayers[player:getId()] then
+        player:sendCancelMessage("You are already queued for a game.")
+        return false
+    end
+
+    if not isInPz(player) then
+        player:sendCancelMessage("You need to be in a protection zone to queue up for a game.")
         return false
     end
 
@@ -121,81 +123,87 @@ function Arena:joinQueue(player, mode)
         end
 
         for _, p in pairs(party:getMembers()) do
+            if not isInPz(p) then
+                player:sendCancelMessage(p:getName() .. " needs to move to a protection zone to queue up for a game.")
+                return false
+            end
+
+            if self.queuedPlayers[p:getId()] then
+                error("[PvP Arena] - Something went wrong.")
+            end
+
             table.insert(players, p:getId())
         end
     end
 
-    if self:isInQueue(player, mode) then
-        self:leaveQueue(player, mode, "buttonLeaveLeader")
-        return false
-    end
-
     table.insert(players, player:getId())
 
-    table.insert(queue, {
+    self.queueIdCounter = self.queueIdCounter + 1
+    local queueId = self.queueIdCounter
+
+    queue[queueId] = {
         players = players,
         isParty = #players > 1
-    })
+    }
+
+    local queuedAmount = self:getQueuedPlayersAmount(mode)
 
     for _, playerId in pairs(players) do
         local p = Player(playerId)
         if not p then
             error(string.format("[PvP Arena] - Can't find Player with ID %s, something went wrong.", playerId))
         end
+
+        self.queuedPlayers[playerId] = {mode = mode, queueId = queueId}
         p:sendTextMessage(MESSAGE_STATUS_SMALL, string.format(reasonMessages["buttonJoin"], mode))
+        -- p:setMovementBlocked(true)
+
+        local data = {
+            mode = mode,
+            queuedAmount = queuedAmount,
+        }
+        p:sendExtendedOpcode(config.opCode, json.encode({action = "joinQueue", data = data}))
     end
 
-    self:sendUpdateQueues()
+    self:sendUpdateLFM(mode, queuedAmount) -- Update queue amount in "Looking for Match" window
+    self:sendUpdateQueues() -- Update queue amounts in main window
 
-    if self:getQueuedPlayersAmount(mode) >= modeNum * 2 then
+    if queuedAmount >= modeNum * 2 then
         self:tryStartMatch(mode)
     end
     return true
 end
 
-function Arena:leaveQueue(player, mode, reason)
-    if not mode then
+---@description Leaves the queue for the Player and all players in their party
+function Arena:leaveQueue(player)
+    local queueData = self.queuedPlayers[type(player) == "number" and player or player:getId()]
+    if not queueData then
         return false
     end
 
-    local partyMsg = ""
-    if reason == "buttonLeaveLeader" then
-        partyMsg = "buttonLeaveMember"
-    else
-        partyMsg = reason
+    local queue = self.queues[queueData.mode]
+    local queueEntry = queue[queueData.queueId]
+
+    if not queueEntry then
+        return false
     end
 
-    local queue = self.queues[mode]
+    for _, playerId in ipairs(queueEntry.players) do
+        self.queuedPlayers[playerId] = nil
 
-    for k, entry in ipairs(queue) do
-        for _, playerId in ipairs(entry.players) do
-            if playerId == player:getId() then
-                if reason then
-                    if reason ~= "logout" then
-                        player:sendTextMessage(MESSAGE_STATUS_SMALL, string.format(reasonMessages[reason], mode))
-                    end
-
-                    if entry.isParty then
-                        for _, pid in pairs(entry.players) do
-                            if pid ~= player:getId() then
-                                local p = Player(pid)
-                                if partyMsg == "logout" then
-                                    p:sendTextMessage(MESSAGE_STATUS_SMALL, string.format(reasonMessages[partyMsg], player:getName()))
-                                else
-                                    p:sendTextMessage(MESSAGE_STATUS_SMALL, string.format(reasonMessages[partyMsg], mode))
-                                end
-                            end
-                        end
-                    end
-                end
-
-                table.remove(queue, k)
-                self:sendUpdateQueues()
-                return true
-            end
+        local player = Player(playerId)
+        if player then
+            player:sendExtendedOpcode(config.opCode, json.encode({action = "leaveQueue"}))
+            -- p:setMovementBlocked(false)
         end
     end
-    return false
+
+    queue[queueData.queueId] = nil
+
+    local queuedAmount = self:getQueuedPlayersAmount(queueData.mode)
+    self:sendUpdateLFM(queueData.mode, queuedAmount) -- Update queue amount in "Looking for Match" window
+    self:sendUpdateQueues()
+    return true
 end
 
 function Arena:validateEntry(entry)
@@ -288,18 +296,18 @@ function Arena:makeTeams(mode)
     local validEntries = {}
     local invalidEntries = {}
 
-    for i, entry in ipairs(queue) do
+    for queueId, entry in pairs(queue) do
         local group = self:validateEntry(entry)
         if group then
-            table.insert(validEntries, { group = group, originalIndex = i })
+            table.insert(validEntries, { group = group, originalIndex = queueId })
         else
-            table.insert(invalidEntries, i) -- If the entry is invalid, mark it for removal
+            table.insert(invalidEntries, queueId) -- If the entry is invalid, mark it for removal
         end
     end
 
     -- Remove invalid entries after the loop
     for _, invalidIndex in ipairs(invalidEntries) do
-        table.remove(queue, invalidIndex)
+        queue[invalidIndex] = nil
     end
 
     local groupedOnly = {}
@@ -309,19 +317,6 @@ function Arena:makeTeams(mode)
 
     local results = findBalancedTeams(groupedOnly, modeNum)
     if results.team1 and results.team2 then
-        local usedQueueIndexes = {}
-        for _, usedIdx in ipairs(results.usedIndexes) do
-            table.insert(usedQueueIndexes, validEntries[usedIdx].originalIndex)
-        end
-
-        -- Sort and remove from queue
-        table.sort(usedQueueIndexes, function(a, b) return a > b end)
-        for _, idx in ipairs(usedQueueIndexes) do
-            if config.debugMode then
-                print("Removed index: " .. idx .. " from queue list.")
-            end
-            table.remove(queue, idx)
-        end
         return results
     end
 
@@ -359,7 +354,7 @@ function Arena:startMatch(mode, teams)
         self.playersInGame[playerId] = matchId
 
         local player = Player(playerId)
-        self:leaveAllQueues(player)
+        self:leaveQueue(player)
 
         local data = {
             matchDuration = match.matchDuration,
@@ -393,14 +388,22 @@ function Arena:endMatch(matchId, mode, winner)
 
         local player = Player(playerId)
         if player then
+            local endData = {
+                result = "draw",
+                lpDiff = 0,
+            }
             if winner == "draw" then
                 player:sendTextMessage(MESSAGE_STATUS_SMALL, "The match ended in a draw. Your LP and Rank remains the same.")
+                endData.result = "draw"
+                endData.lpDiff = 0
             else
                 local team = match:getTeam(playerId)
                 if team then
                     if winner == team then
                         self:addLP(player, config.lpWin)
                         player:sendTextMessage(MESSAGE_STATUS_SMALL, "Your team has won. You gained " .. config.lpWin .. " LP.")
+                        endData.result = "win"
+                        endData.lpDiff = config.lpWin
                     else
                         local oldLp = self:getLP(player)
                         self:removeLP(player, config.lpLoss)
@@ -408,11 +411,13 @@ function Arena:endMatch(matchId, mode, winner)
 
                         local lostLp = oldLp - newLp
                         player:sendTextMessage(MESSAGE_STATUS_SMALL, "Your team has lost. You lost " .. lostLp .. " LP.")
+                        endData.result = "loss"
+                        endData.lpDiff = lostLp
                     end
                 end
             end
             player:updatePvpRank()
-            player:sendExtendedOpcode(config.opCode, json.encode({action = "endMatch", data = {winner = winner}}))
+            player:sendExtendedOpcode(config.opCode, json.encode({action = "endMatch", data = endData}))
         end
     end
 
@@ -450,9 +455,6 @@ function Arena:removeLP(player, amount)
         print("NEW LP: " .. newLp)
         print("-----------------------------------")
     end
-end
-
-function Arena:updateRank(player)
 end
 
 ---@param mode string mode to check queue for
@@ -501,7 +503,6 @@ function Player:sendShowPvpWindow()
         rank = self:getPvpRank(),
         nextRankLp = rankThresholds[self:getPvpRank() + 1],
         playersQueued = Arena:getQueuedPlayersAmount(),
-        -- queueStatus = self:getPvpQueueStatus() -- Could be used later for visually showing on client which queues we're currently in
     }
 
     self:sendExtendedOpcode(config.opCode, json.encode({action = "showWindow", data = data}))
@@ -527,6 +528,15 @@ function Arena:sendUpdateQueues()
             player:sendExtendedOpcode(config.opCode, json.encode({action = "updateQueues", data = self:getQueuedPlayersAmount()}))
         else
             self.hasWindowOpen[k] = nil
+        end
+    end
+end
+
+function Arena:sendUpdateLFM(mode, queuedAmount)
+    for playerId, data in pairs(self.queuedPlayers) do
+        if data.mode == mode then
+            local player = Player(playerId)
+            player:sendExtendedOpcode(config.opCode, json.encode({action = "updateLFM", data = {mode = mode, queuedAmount = queuedAmount}}))
         end
     end
 end
